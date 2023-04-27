@@ -7,7 +7,7 @@
     "url": "https://github.com/yrahal/paircoder.git"
   },
   "publisher": "YoucefRahal",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -64,7 +64,7 @@
           "paircoder.docker.image": {
             "order": 1,
             "type": "string",
-            "default": "paircoder-server:latest",
+            "default": "yrahal/paircoder-server:latest",
             "description": "Docker image to run the server code."
           },
           "paircoder.docker.port": {
