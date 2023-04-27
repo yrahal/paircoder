@@ -19,7 +19,7 @@ function activate(context) {
 		console.log('Starting LLM server container...');
 		vscode.window.showInformationMessage('Starting LLM server container...');
 
-		const config = vscode.workspace.getConfiguration('paircoder');
+		const config = vscode.workspace.getConfiguration('youcefrahal.paircoder');
 
 		const env = !!config.model.filename ? ['-e', `MODEL=${config.model.filename}`] : [];
 		const cmd = ['run', '--rm', '--name', serverContainerName, '-v', `${config.model.modelsPath}:/models`, '-p', `${config.docker.port}:80`].concat(env).concat([config.docker.image]);
@@ -89,7 +89,7 @@ function activate(context) {
 	let disposablePairCode = vscode.commands.registerCommand('paircoder.paircode', async function () {
 		console.log('Paircoding...');
 		
-		const config = vscode.workspace.getConfiguration('paircoder');
+		const config = vscode.workspace.getConfiguration('youcefrahal.paircoder');
 		const url = config.server.url;
 		console.info(`Predicting using url='${url}'`);
 
