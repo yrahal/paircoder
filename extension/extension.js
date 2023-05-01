@@ -15,6 +15,8 @@ const serverContainerName = 'paircoder-server';
 function activate(context) {
 	console.log('Extension "paircoder" is now active');
 
+	let source = null;
+
 	let disposableStart = vscode.commands.registerCommand('paircoder.docker.start', async function () {
 		console.log('Starting LLM server container...');
 		vscode.window.showInformationMessage('Starting LLM server container...');
@@ -91,7 +93,8 @@ function activate(context) {
 		
 		const config = vscode.workspace.getConfiguration('youcefrahal.paircoder');
 		const url = config.server.url;
-		console.info(`Predicting using url='${url}'`);
+		const n_predict = config.model.n_predict;
+		console.info(`Predicting using url='${url}' n_predict=${n_predict}`);
 
 		const eventEmitter = new EventEmitter();
 
@@ -113,11 +116,19 @@ function activate(context) {
 		let prediction = '';
 		let charIndex = 0;
 
+		if (!!source) {
+			source.cancel('Automatically stopped current request');
+		}
+
+		const CancelToken = axios.CancelToken;
+		source = CancelToken.source();
+
 		const response = await axios({
 			method: 'POST',
 			url: url,
+			cancelToken: source.token,
 			responseType: 'stream',
-			data: { prompt: highlight, clip_prompt: true },
+			data: { prompt: highlight, n_predict: n_predict, clip_prompt: true },
 		})
 			.catch((error) => {
 				console.error(error);
@@ -172,9 +183,20 @@ function activate(context) {
 		console.log('Paircoding completed.');
 	});
 
+	let disposablePairCodeStop = vscode.commands.registerCommand('paircoder.paircode.stop', function () {
+		console.log('Stopping Paircoding...');
+
+		if (!!source) {
+			source.cancel('Manually stopped current request');
+		}
+
+		console.log('Paircoding stopped.');
+	});
+
 	context.subscriptions.push(disposableStart);
 	context.subscriptions.push(disposableStop);
 	context.subscriptions.push(disposablePairCode);
+	context.subscriptions.push(disposablePairCodeStop);
 }
 
 function deactivate() { }

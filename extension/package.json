@@ -7,7 +7,7 @@
     "url": "https://github.com/yrahal/paircoder.git"
   },
   "publisher": "YoucefRahal",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -34,6 +34,10 @@
       {
         "command": "paircoder.paircode",
         "title": "PairCoder: PairCode"
+      },
+      {
+        "command": "paircoder.paircode.stop",
+        "title": "PairCoder: Stop PairCoding"
       }
     ],
     "menus": {
@@ -64,7 +68,7 @@
           "youcefrahal.paircoder.docker.image": {
             "order": 1,
             "type": "string",
-            "default": "yrahal/paircoder-server:latest",
+            "default": "yrahal/paircoder-server:0.0.4",
             "description": "Docker image to run the server code."
           },
           "youcefrahal.paircoder.docker.port": {
@@ -90,6 +94,12 @@
             "type": "string",
             "default": null,
             "description": "Filename of the LLM to load. If unspecfifed, the first file found in the models folder will be used."
+          },
+          "youcefrahal.paircoder.model.n_predict": {
+            "order": 2,
+            "type": "integer",
+            "default": 128,
+            "description": "Number of tokens to predict (infinity: -1)"
           }
         }
       }

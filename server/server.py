@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import subprocess
@@ -14,7 +15,6 @@ app = FastAPI()
 
 model = ""
 models_path = "/models"
-n_predict = "512"
 
 @app.on_event("startup")
 async def startup_event():
@@ -39,6 +39,7 @@ async def startup_event():
 
 async def predict_streamer(input_json):
     prompt = input_json["prompt"]
+    n_predict = str(input_json.get("n_predict", 128))
     clip_prompt = input_json.get("clip_prompt", False)
 
     mod_prompt = None
@@ -47,20 +48,32 @@ async def predict_streamer(input_json):
     if clip_prompt:
         log.info("Clipping prompt...")
     
-    cmd = ["./llama.cpp", "-m", model, "-n", n_predict, "-p", prompt]
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    for c in iter(lambda: process.stdout.read(1), b""):
-        if clip_prompt:
-            cumulative = cumulative if cumulative != None else ""
-            mod_prompt = mod_prompt if mod_prompt != None else " " + prompt
+    process = await asyncio.create_subprocess_exec("./llama.cpp", "-m", model, "-n", n_predict, "-p", prompt, stdout=asyncio.subprocess.PIPE)
+
+    try:
+        while True:
+            if process.stdout.at_eof():
+                break
             
-            cumulative += c.decode('utf-8')
-            if mod_prompt.startswith(cumulative):
-                continue
-            else:
-                clip_prompt = False
-        
-        yield c
+            c = await process.stdout.read(1)
+            if clip_prompt:
+                cumulative = cumulative if cumulative != None else ""
+                mod_prompt = mod_prompt if mod_prompt != None else " " + prompt
+                
+                cumulative += c.decode()
+                if mod_prompt.startswith(cumulative):
+                    continue
+                else:
+                    clip_prompt = False
+            
+            yield c
+            
+        log.info("Prediction completed.")
+    finally:
+        if process.returncode is None:
+            log.info("Terminating running process...")
+            process.terminate()
+        log.info("Streaming completed.")
 
 @app.post("/predict")
 async def predict(request: Request):
